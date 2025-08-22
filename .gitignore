@@ -29,3 +29,6 @@ Thumbs.db
 
 # UV cache
 .uv-cache/
+
+# Egg info
+*.egg-info/

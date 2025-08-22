@@ -59,13 +59,15 @@ playwright install chromium
 ### 立即执行一次
 
 ```bash
-python main.py --once
+source .venv/bin/activate  # 激活虚拟环境
+python -m small_redbook.main --once
 ```
 
 ### 定时执行
 
 ```bash
-python main.py
+source .venv/bin/activate  # 激活虚拟环境
+python -m small_redbook.main
 ```
 
 默认会在每天设定的时间执行任务。
