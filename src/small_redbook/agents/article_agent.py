@@ -348,6 +348,11 @@ def get_popular_articles(articles: List[Dict], count: int = 5) -> List[Dict]:
     popular_articles = []
     for article in sorted_articles[:count * 2]:  # 多获取一些文章，因为有些可能获取不到内容
         print(f"\n正在处理文章: {article.get('title', '')}")
+        # 检查文章是否有链接
+        if 'link' not in article:
+            print("文章缺少链接，跳过")
+            continue
+            
         # 获取文章详细内容
         content_info = fetch_article_content(article['link'])
         article.update(content_info)
