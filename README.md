@@ -98,6 +98,31 @@ status = mcp_server_manager.get_server_status("playwright")
 print(f"Playwright服务器状态: {status}")
 ```
 
+### MCP自动集成功能
+
+项目支持自动集成配置的MCP服务：
+
+1. 在 `mcp-config.json` 中定义MCP服务器
+2. 在 `src/small_redbook/mcp/auto_config.ini` 中配置自动集成选项
+3. 启动任务时自动启动配置的MCP服务器
+
+示例自动配置：
+```ini
+[general]
+# 是否启用MCP自动集成功能
+enable_mcp_auto_integration = true
+
+# 是否自动启动配置的MCP服务器
+auto_start_servers = true
+
+[mcp_servers]
+# 配置需要自动启动的MCP服务器
+playwright = true
+filesystem = false
+```
+
+当启用自动集成功能后，系统会在任务启动时自动启动配置的MCP服务器，并在任务完成时自动停止它们。
+
 ### 第三方服务配置（传统方式）
 
 项目也支持通过INI文件配置第三方服务：

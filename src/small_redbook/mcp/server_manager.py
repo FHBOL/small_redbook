@@ -6,16 +6,20 @@ import json
 import os
 import subprocess
 import asyncio
-from typing import Dict, Any, Optional
+import configparser
+from typing import Dict, Any, Optional, List
 
 class MCPServerManager:
     """MCP服务器管理器"""
     
-    def __init__(self, config_file: str = "mcp-config.json"):
+    def __init__(self, config_file: str = "mcp-config.json", auto_config_file: str = None):
         self.config_file = config_file
+        self.auto_config_file = auto_config_file or os.path.join(os.path.dirname(__file__), "auto_config.ini")
         self.servers: Dict[str, subprocess.Popen] = {}
         self.config: Dict[str, Any] = {}
+        self.auto_config: configparser.ConfigParser = configparser.ConfigParser()
         self.load_config()
+        self.load_auto_config()
     
     def load_config(self):
         """加载MCP服务器配置"""
@@ -26,6 +30,29 @@ class MCPServerManager:
         else:
             print(f"配置文件 {self.config_file} 不存在")
             self.config = {"mcpServers": {}}
+    
+    def load_auto_config(self):
+        """加载自动集成配置"""
+        if os.path.exists(self.auto_config_file):
+            self.auto_config.read(self.auto_config_file)
+            print(f"加载了自动集成配置: {self.auto_config_file}")
+        else:
+            print(f"自动集成配置文件 {self.auto_config_file} 不存在")
+    
+    def is_auto_integration_enabled(self) -> bool:
+        """检查是否启用了MCP自动集成功能"""
+        if 'general' in self.auto_config:
+            return self.auto_config.getboolean('general', 'enable_mcp_auto_integration', fallback=False)
+        return False
+    
+    def get_auto_start_servers(self) -> List[str]:
+        """获取需要自动启动的服务器列表"""
+        servers = []
+        if 'mcp_servers' in self.auto_config:
+            for server_name, enabled in self.auto_config['mcp_servers'].items():
+                if enabled.lower() == 'true':
+                    servers.append(server_name)
+        return servers
     
     def start_server(self, server_name: str) -> bool:
         """启动指定的MCP服务器"""
@@ -89,6 +116,27 @@ class MCPServerManager:
                 return "已停止"
         else:
             return "未启动"
+    
+    def auto_start_configured_servers(self):
+        """自动启动配置的服务器"""
+        if not self.is_auto_integration_enabled():
+            print("MCP自动集成功能未启用")
+            return
+        
+        auto_start = self.auto_config.getboolean('general', 'auto_start_servers', fallback=True)
+        if not auto_start:
+            print("自动启动服务器功能未启用")
+            return
+        
+        servers_to_start = self.get_auto_start_servers()
+        if not servers_to_start:
+            print("未配置需要自动启动的服务器")
+            # 如果没有明确配置，启动所有服务器
+            servers_to_start = list(self.config.get("mcpServers", {}).keys())
+        
+        print(f"自动启动MCP服务器: {servers_to_start}")
+        for server_name in servers_to_start:
+            self.start_server(server_name)
 
 # 创建全局MCP服务器管理器实例
 mcp_server_manager = MCPServerManager()

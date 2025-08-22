@@ -13,7 +13,14 @@ from agents.copy_agent import CopyAgent
 # 尝试导入MCP客户端
 try:
     from ..mcp.client import get_current_time_tool, format_article_info_tool, save_xiaohongshu_copy_tool
+    from ..mcp import mcp_server_manager, initialize_tool_registrar
     MCP_AVAILABLE = True
+    
+    # 初始化工具注册器
+    mcp_tool_registrar = initialize_tool_registrar(mcp_server_manager)
+    
+    # 自动启动配置的MCP服务器
+    mcp_server_manager.auto_start_configured_servers()
 except ImportError:
     MCP_AVAILABLE = False
     print("MCP客户端未找到，将使用默认实现")
@@ -36,6 +43,11 @@ class MainAgent:
         # Create output directory if it doesn't exist
         if not os.path.exists(OUTPUT_DIR):
             os.makedirs(OUTPUT_DIR)
+        
+        # 如果MCP可用，自动注册工具
+        if MCP_AVAILABLE:
+            # 这里可以添加自动注册的工具
+            pass
     
     def process_articles(self) -> None:
         """
@@ -137,3 +149,7 @@ class MainAgent:
         """
         print("立即执行一次任务...")
         self.process_articles()
+        
+        # 如果MCP可用，停止所有服务器
+        if MCP_AVAILABLE:
+            mcp_server_manager.stop_all_servers()
