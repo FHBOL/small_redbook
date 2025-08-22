@@ -9,13 +9,14 @@ def main():
     # 解析命令行参数
     if len(sys.argv) > 1 and sys.argv[1] == "--once":
         # 立即执行一次任务
-        from scheduler import run_once
-        run_once()
+        from agents.main_agent import MainAgent
+        agent = MainAgent()
+        agent.run_once()
     else:
         # 创建输出目录
-        output_dir = os.path.join(project_root, "output")
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        from config import OUTPUT_DIR
+        if not os.path.exists(OUTPUT_DIR):
+            os.makedirs(OUTPUT_DIR)
         
         # 启动定时任务
         from scheduler import run_scheduler

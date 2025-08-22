@@ -1,13 +1,23 @@
-# 配置文件
-# 机器之心网站相关配置
-JIQIZHIXIN_RSS_URL = "https://www.jiqizhixin.com/rss.xml"
+import os
+from dotenv import load_dotenv
 
-# 热门文章筛选配置
-TOP_ARTICLES_COUNT = 5  # 每日最热门文章数量
+# Load environment variables from .env file
+load_dotenv()
 
-# 定时任务配置
-SCHEDULE_TIME = "09:00"  # 每天执行时间
+# Configuration for the small redbook project
 
-# 心流AI模型配置
-AI_MODEL_NAME = "qwen3-coder"  # 使用的心流AI模型名称
-DASHSCOPE_API_KEY = "sk-fc4bd5a96fef07bb6fa428b601a2c3a0"  # 心流API密钥
+# Jiqizhixin website configuration
+JIQIZHIXIN_RSS_URL = os.getenv("JIQIZHIXIN_RSS_URL", "https://www.jiqizhixin.com/rss.xml")
+
+# Popular articles configuration
+TOP_ARTICLES_COUNT = int(os.getenv("TOP_ARTICLES_COUNT", "5"))
+
+# Schedule configuration
+SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "09:00")
+
+# AI model configuration
+AI_MODEL_NAME = os.getenv("AI_MODEL_NAME", "kimi-k2")
+DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
+
+# Output directory
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
