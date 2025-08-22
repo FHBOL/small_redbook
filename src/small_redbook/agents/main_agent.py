@@ -40,7 +40,7 @@ class MainAgent:
         
         # 1. 获取文章列表
         print("正在获取文章列表...")
-        articles = fetch_articles_from_rss()
+        articles = fetch_articles_from_rss.invoke({})
         if not articles:
             print("未获取到文章列表")
             return
@@ -49,7 +49,7 @@ class MainAgent:
         
         # 2. 筛选热门文章
         print("正在筛选热门文章...")
-        popular_articles = get_popular_articles(articles, TOP_ARTICLES_COUNT)
+        popular_articles = get_popular_articles.invoke({"articles": articles, "count": TOP_ARTICLES_COUNT})
         if not popular_articles:
             print("未筛选到热门文章")
             return
