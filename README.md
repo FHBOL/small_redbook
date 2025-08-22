@@ -63,6 +63,49 @@ source .venv/bin/activate  # 激活虚拟环境
 python -m small_redbook.main --mcp
 ```
 
+### 第三方MCP服务集成
+
+项目支持通过标准MCP配置文件集成第三方MCP服务：
+
+1. 编辑 `mcp-config.json` 文件定义服务器配置
+2. 使用 `mcp_server_manager` 启动和管理服务器
+
+示例配置：
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp-server"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/filesystem-server"]
+    }
+  }
+}
+```
+
+启动服务器：
+```python
+from src.small_redbook.mcp import mcp_server_manager
+
+# 启动Playwright MCP服务器
+mcp_server_manager.start_server("playwright")
+
+# 查看服务器状态
+status = mcp_server_manager.get_server_status("playwright")
+print(f"Playwright服务器状态: {status}")
+```
+
+### 第三方服务配置（传统方式）
+
+项目也支持通过INI文件配置第三方服务：
+
+1. 编辑 `src/small_redbook/mcp/third_party_config.ini` 文件
+2. 启用需要的第三方服务并配置URL和认证信息
+3. 在agent中注册相应的工具
+
 ## 配置
 
 在 `.env` 文件中设置以下参数：

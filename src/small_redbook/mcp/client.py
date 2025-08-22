@@ -7,11 +7,14 @@ from typing import List, Dict, Any
 import json
 from datetime import datetime
 import os
+import configparser
+from urllib.parse import urljoin
 
 # 尝试导入MCP相关模块
 try:
     from mcp import ClientSession
     from mcp.client.stdio import stdio_client, StdioServerParameters
+    from mcp.client.sse import sse_client
     MCP_AVAILABLE = True
     print("MCP模块导入成功")
 except ImportError as e:
@@ -23,12 +26,32 @@ class MCPClient:
     
     def __init__(self):
         self.mcp_available = MCP_AVAILABLE
+        self.third_party_services = {}
+        
         if self.mcp_available:
-            # 定义MCP服务器参数
+            # 定义本地MCP服务器参数
             self.server_params = StdioServerParameters(
                 command="python",
                 args=["-m", "small_redbook.mcp.tools"]
             )
+            
+            # 加载第三方MCP服务配置
+            self.load_third_party_config()
+    
+    def load_third_party_config(self):
+        """加载第三方MCP服务配置"""
+        config_path = os.path.join(os.path.dirname(__file__), "third_party_config.ini")
+        if os.path.exists(config_path):
+            config = configparser.ConfigParser()
+            config.read(config_path)
+            
+            for section in config.sections():
+                if config.getboolean(section, "enabled", fallback=False):
+                    self.third_party_services[section] = {
+                        "url": config.get(section, "url"),
+                        "auth_token": config.get(section, "auth_token", fallback=None)
+                    }
+            print(f"加载了 {len(self.third_party_services)} 个第三方MCP服务")
     
     async def get_current_time(self) -> str:
         """获取当前时间"""
@@ -110,6 +133,37 @@ class MCPClient:
             f.write(f"标签: {', '.join(tags or [])}\n")
         
         return f"文案已保存到 {filename}"
+    
+    async def call_third_party_tool(self, service_name: str, tool_name: str, params: Dict[str, Any]) -> Any:
+        """调用第三方MCP服务的工具"""
+        if not self.mcp_available or service_name not in self.third_party_services:
+            return None
+            
+        service_config = self.third_party_services[service_name]
+        service_url = service_config["url"]
+        auth_token = service_config["auth_token"]
+        
+        try:
+            # 根据URL类型选择合适的客户端
+            if service_url.startswith("http://") or service_url.startswith("https://"):
+                # 检查是否是SSE端点
+                if "/sse" in service_url or service_url.endswith(".sse"):
+                    async with sse_client(service_url) as (read, write):
+                        async with ClientSession(read, write) as session:
+                            await session.initialize()
+                            result = await session.call_tool(tool_name, params)
+                            return result.content if result.content else None
+                else:
+                    # 对于HTTP客户端，我们需要使用不同的方法
+                    # 这里简化处理，实际项目中可能需要更复杂的实现
+                    print(f"HTTP客户端调用暂未实现: {service_url}")
+                    return None
+            else:
+                print(f"不支持的服务URL类型: {service_url}")
+                return None
+        except Exception as e:
+            print(f"调用第三方MCP服务失败: {e}")
+            return None
 
 # 创建全局MCP客户端实例
 mcp_client = MCPClient()
@@ -129,3 +183,15 @@ async def format_article_info_tool(title: str, content: str, tags: List[str] = N
 async def save_xiaohongshu_copy_tool(title: str, content: str, original_title: str, tags: List[str] = None) -> str:
     """保存小红书文案的工具"""
     return await mcp_client.save_xiaohongshu_copy(title, content, original_title, tags)
+
+# 第三方MCP工具装饰器
+def third_party_tool(service_name: str, tool_name: str):
+    """创建第三方MCP工具的装饰器"""
+    async def tool_func(**kwargs) -> Any:
+        """调用第三方MCP工具"""
+        return await mcp_client.call_third_party_tool(service_name, tool_name, kwargs)
+    
+    # 为函数添加文档字符串
+    tool_func.__doc__ = f"调用第三方MCP服务 {service_name} 的 {tool_name} 工具"
+    
+    return tool(tool_func)

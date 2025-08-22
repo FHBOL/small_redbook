@@ -1,0 +1,29 @@
+{
+    "mcpServers": {
+        "local": {
+            "command": "python",
+            "args": [
+                "-m",
+                "small_redbook.mcp.tools"
+            ]
+        },
+        "playwright": {
+            "command": "npx",
+            "args": [
+                "@playwright/mcp-server"
+            ]
+        },
+        "filesystem": {
+            "command": "npx",
+            "args": [
+                "@modelcontextprotocol/filesystem-server"
+            ]
+        },
+        "weather": {
+            "command": "node",
+            "args": [
+                "/path/to/weather-mcp-server.js"
+            ]
+        }
+    }
+}
