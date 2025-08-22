@@ -10,6 +10,14 @@ from config import DASHSCOPE_API_KEY, AI_MODEL_NAME, OUTPUT_DIR, TOP_ARTICLES_CO
 from agents.article_agent import ArticleAgent, fetch_articles_from_rss, get_popular_articles
 from agents.copy_agent import CopyAgent
 
+# 尝试导入MCP客户端
+try:
+    from ..mcp.client import get_current_time_tool, format_article_info_tool, save_xiaohongshu_copy_tool
+    MCP_AVAILABLE = True
+except ImportError:
+    MCP_AVAILABLE = False
+    print("MCP客户端未找到，将使用默认实现")
+
 class MainAgent:
     def __init__(self):
         # Initialize the LLM
@@ -59,10 +67,39 @@ class MainAgent:
         # 3. 生成小红书文案
         for i, article in enumerate(popular_articles):
             print(f"正在生成第 {i+1} 篇文章的小红书文案: {article.get('title', '')}")
+            
+            # 如果MCP可用，使用MCP工具格式化文章信息
+            if MCP_AVAILABLE:
+                try:
+                    formatted_article = format_article_info_tool.invoke({
+                        "title": article.get('title', ''),
+                        "content": article.get('content', ''),
+                        "tags": article.get('tags', [])
+                    })
+                    if formatted_article:
+                        article.update(formatted_article)
+                except Exception as e:
+                    print(f"MCP格式化文章信息失败: {e}")
+            
             xiaohongshu_copy = self.copy_agent.generate_xiaohongshu_copy(article)
             if xiaohongshu_copy:
                 print(f"生成小红书文案成功: {xiaohongshu_copy.get('title', '')}")
-                # 保存到文件，文件名包含时间戳
+                
+                # 如果MCP可用，使用MCP工具保存文案
+                if MCP_AVAILABLE:
+                    try:
+                        save_result = save_xiaohongshu_copy_tool.invoke({
+                            "title": xiaohongshu_copy.get('title', ''),
+                            "content": xiaohongshu_copy.get('content', ''),
+                            "original_title": article.get('title', ''),
+                            "tags": xiaohongshu_copy.get('tags', [])
+                        })
+                        print(f"保存结果: {save_result}")
+                        continue  # 如果MCP保存成功，跳过默认保存逻辑
+                    except Exception as e:
+                        print(f"MCP保存文案失败: {e}")
+                
+                # 默认保存到文件，文件名包含时间戳
                 # 清理标题中的特殊字符
                 clean_title = re.sub(r'[^\w\s-]', '', article.get('title', 'unknown')[:10])
                 clean_title = re.sub(r'[-\s]+', '_', clean_title).strip('_')

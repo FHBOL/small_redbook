@@ -11,6 +11,14 @@ import re
 import time
 from config import JIQIZHIXIN_RSS_URL, DASHSCOPE_API_KEY, AI_MODEL_NAME
 
+# 尝试导入MCP客户端
+try:
+    from ..mcp.client import get_current_time_tool, format_article_info_tool, save_xiaohongshu_copy_tool
+    MCP_AVAILABLE = True
+except ImportError:
+    MCP_AVAILABLE = False
+    print("MCP客户端未找到，将使用默认实现")
+
 @tool
 def fetch_articles_from_rss() -> List[Dict]:
     """
@@ -393,6 +401,14 @@ class ArticleAgent:
             fetch_article_content_with_playwright,
             get_popular_articles
         ]
+        
+        # 如果MCP可用，添加MCP工具
+        if MCP_AVAILABLE:
+            self.tools.extend([
+                get_current_time_tool,
+                format_article_info_tool,
+                save_xiaohongshu_copy_tool
+            ])
         
         # Create the prompt
         prompt = ChatPromptTemplate.from_messages([

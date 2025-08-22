@@ -9,6 +9,7 @@
 3. 调用AI模型生成小红书风格文案
 4. 支持定时执行和立即执行两种模式
 5. 生成的文案包含标题、正文和标签
+6. 支持MCP (Model Context Protocol) 集成，提供标准化的工具接口
 
 ## 环境管理
 
@@ -45,6 +46,23 @@ uv pip install -e .
 playwright install chromium
 ```
 
+## MCP集成
+
+本项目集成了MCP (Model Context Protocol)，提供标准化的工具接口，便于与其他AI系统集成。
+
+### MCP工具
+
+1. `get_current_time`: 获取当前时间
+2. `format_article_info`: 格式化文章信息用于小红书文案生成
+3. `save_xiaohongshu_copy`: 保存生成的小红书文案到文件
+
+### 启动MCP服务器模式
+
+```bash
+source .venv/bin/activate  # 激活虚拟环境
+python -m small_redbook.main --mcp
+```
+
 ## 配置
 
 在 `.env` 文件中设置以下参数：
@@ -79,6 +97,7 @@ python -m small_redbook.main
 1. **ArticleAgent**: 负责文章获取和处理
 2. **CopyAgent**: 负责文案生成
 3. **MainAgent**: 协调整个流程
+4. **MCP Tools**: 提供标准化的工具接口
 
 ## 输出格式
 
@@ -99,3 +118,4 @@ python -m small_redbook.main
 - 使用OpenAI兼容的客户端调用AI平台API
 - 使用schedule实现定时任务
 - 使用uv管理Python环境
+- 集成MCP (Model Context Protocol) 提供标准化工具接口

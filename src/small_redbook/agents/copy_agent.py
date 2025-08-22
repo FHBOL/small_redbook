@@ -4,6 +4,14 @@ from langchain_openai import ChatOpenAI
 from typing import Dict, List
 from config import DASHSCOPE_API_KEY, AI_MODEL_NAME
 
+# 尝试导入MCP客户端
+try:
+    from ..mcp.client import get_current_time_tool, format_article_info_tool, save_xiaohongshu_copy_tool
+    MCP_AVAILABLE = True
+except ImportError:
+    MCP_AVAILABLE = False
+    print("MCP客户端未找到，将使用默认实现")
+
 class CopyAgent:
     def __init__(self):
         # Initialize the LLM
