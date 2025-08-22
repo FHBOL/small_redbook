@@ -4,9 +4,10 @@ from langchain_openai import ChatOpenAI
 from typing import Dict, List
 import os
 import re
+import json
 from datetime import datetime
 from config import DASHSCOPE_API_KEY, AI_MODEL_NAME, OUTPUT_DIR, TOP_ARTICLES_COUNT
-from agents.article_agent import ArticleAgent
+from agents.article_agent import ArticleAgent, fetch_articles_from_rss, get_popular_articles
 from agents.copy_agent import CopyAgent
 
 class MainAgent:
@@ -39,7 +40,7 @@ class MainAgent:
         
         # 1. 获取文章列表
         print("正在获取文章列表...")
-        articles = self.article_agent.run("请从机器之心RSS获取最新文章列表")
+        articles = fetch_articles_from_rss()
         if not articles:
             print("未获取到文章列表")
             return
@@ -48,7 +49,7 @@ class MainAgent:
         
         # 2. 筛选热门文章
         print("正在筛选热门文章...")
-        popular_articles = self.article_agent.run(f"请从以下文章中筛选出最热门的{TOP_ARTICLES_COUNT}篇文章: {articles}")
+        popular_articles = get_popular_articles(articles, TOP_ARTICLES_COUNT)
         if not popular_articles:
             print("未筛选到热门文章")
             return
